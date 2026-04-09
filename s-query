@@ -1,0 +1,4 @@
+#!/bin/bash
+query="$1"
+echo searching for query "<$1>"
+ddgr --json "$query"
