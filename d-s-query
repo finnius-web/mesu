@@ -6,8 +6,8 @@ if ! command -v ddgr &> /dev/null || ! command -v jq &> /dev/null; then
 fi
 
 query="$1"
-depth_limit=2 # How many clicks deep to go
-output_file="scan_results.txt"
+depth_limit=2 
+output_file="d-s-results"
 
 if [ -z "$query" ]; then
     echo "Usage: $0 <search-query>"
