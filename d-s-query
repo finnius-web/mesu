@@ -1,0 +1,46 @@
+#!/bin/bash
+
+if ! command -v ddgr &> /dev/null || ! command -v jq &> /dev/null; then
+    echo "Error: This script requires 'ddgr' and 'jq'."
+    exit 1
+fi
+
+query="$1"
+depth_limit=2 # How many clicks deep to go
+output_file="scan_results.txt"
+
+if [ -z "$query" ]; then
+    echo "Usage: $0 <search-query>"
+    exit 1
+fi
+
+echo "--- Starting Deep Scan for: $query ---" > "$output_file"
+
+
+echo "[+] Fetching initial sources from DuckDuckGo..."
+seeds=$(ddgr --json -n 5 "$query" | jq -r '.[].url')
+
+
+extract_links() {
+    local url=$1
+    # Use curl to get page, then grep for anything looking like a URL
+    curl -sL "$url" | grep -oP 'https?://[a-zA-Z0-9./?=_-]+' | sort -u
+}
+
+
+for seed in $seeds; do
+    echo "[!] Scanning Source: $seed" | tee -a "$output_file"
+    
+    # Level 1: Find links on the search result page
+    level1_links=$(extract_links "$seed")
+    
+    for link in $level1_links; do
+        echo "  [>] Found Sub-link: $link" >> "$output_file"
+        
+        
+        echo "    [>>] Peeking inside $link..."
+        extract_links "$link" >> "$output_file"
+    done
+done
+
+echo "--- Scan Complete. Results saved to $output_file ---"
